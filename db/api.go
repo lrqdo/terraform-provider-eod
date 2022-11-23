@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 func (c *Client) Delete(ID string) error {
@@ -18,10 +17,7 @@ func (c *Client) Delete(ID string) error {
 		return err
 	}
 
-	client := http.Client{
-		Timeout: 30 * time.Second,
-	}
-	_, err = client.Do(req)
+	_, err = c.http.Do(req)
 	return err
 }
 
@@ -34,10 +30,7 @@ func (c *Client) Create(retentionDays int) (*DB, error) {
 		return nil, errors.New("Unable to post:" + err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := http.Client{
-		Timeout: 30 * time.Second,
-	}
-	postRes, err := client.Do(req)
+	postRes, err := c.http.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +42,7 @@ func (c *Client) Create(retentionDays int) (*DB, error) {
 }
 
 func (c *Client) Read(ID string) (*DB, error) {
-	getRes, err := http.Get(fmt.Sprintf("%s/%s", c.url, ID))
+	getRes, err := c.http.Get(fmt.Sprintf("%s/%s", c.url, ID))
 	if err != nil {
 		return nil, errors.New("Unable to get" + err.Error())
 	}
