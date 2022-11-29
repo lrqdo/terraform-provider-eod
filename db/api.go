@@ -47,7 +47,7 @@ func (c *Client) Read(ID string) (*DB, error) {
 		return nil, errors.New("Unable to get" + err.Error())
 	}
 	if response.StatusCode == 404 {
-		return nil, NotFound(ID)
+		return nil, &NotFound{ID}
 	}
 	db, err := readBody(response.Body)
 	if err != nil {
@@ -78,8 +78,10 @@ type DB struct {
 	Status    string `json:"Status"`
 }
 
-type NotFound string
+type NotFound struct {
+	s string
+}
 
 func (db NotFound) Error() string {
-	return fmt.Sprintf("Env %s not found", db)
+	return fmt.Sprintf("Env %s not found", db.s)
 }

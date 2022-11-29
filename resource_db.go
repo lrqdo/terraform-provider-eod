@@ -12,6 +12,7 @@ func resourceRucheDb() *schema.Resource {
 		Create: resourceRucheDBCreate,
 		Read:   resourceRucheDBRead,
 		Delete: resourceRucheDBDelete,
+		Exists: resourceRucheDBExists,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -44,17 +45,25 @@ func resourceRucheDBDelete(data *schema.ResourceData, i interface{}) error {
 	return dbClient.Delete(data.Get("name").(string))
 }
 
+func resourceRucheDBExists(data *schema.ResourceData, i interface{}) (bool, error) {
+	dbClient := i.(*db.Client)
+	_, err := dbClient.Read(data.Get("name").(string))
+	if err != nil {
+		switch err.(type) {
+		case *db.NotFound:
+			return false, nil
+		default:
+			return true, err
+		}
+	}
+	return true, nil
+}
+
 func resourceRucheDBRead(data *schema.ResourceData, i interface{}) error {
 	dbClient := i.(*db.Client)
 	env, err := dbClient.Read(data.Get("name").(string))
 	if err != nil {
-		switch err.(type) {
-		case db.NotFound:
-			data.SetId("")
-			return err
-		default:
-			return err
-		}
+		return err
 	}
 	data.Set("port", env.Port)
 	data.Set("expires_at", env.ExpiresAt)
