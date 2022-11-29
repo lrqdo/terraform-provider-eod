@@ -42,11 +42,14 @@ func (c *Client) Create(retentionDays int) (*DB, error) {
 }
 
 func (c *Client) Read(ID string) (*DB, error) {
-	getRes, err := c.http.Get(fmt.Sprintf("%s/%s", c.url, ID))
+	response, err := c.http.Get(fmt.Sprintf("%s/%s", c.url, ID))
 	if err != nil {
 		return nil, errors.New("Unable to get" + err.Error())
 	}
-	db, err := readBody(getRes.Body)
+	if response.StatusCode == 404 {
+		return nil, NotFound(ID)
+	}
+	db, err := readBody(response.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -73,4 +76,10 @@ type DB struct {
 	Host      string `json:"Host"`
 	Port      string `json:"Port"`
 	Status    string `json:"Status"`
+}
+
+type NotFound string
+
+func (db NotFound) Error() string {
+	return fmt.Sprintf("Env %s not found", db)
 }

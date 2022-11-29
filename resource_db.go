@@ -48,7 +48,13 @@ func resourceRucheDBRead(data *schema.ResourceData, i interface{}) error {
 	dbClient := i.(*db.Client)
 	env, err := dbClient.Read(data.Get("name").(string))
 	if err != nil {
-		return err
+		switch err.(type) {
+		case db.NotFound:
+			data.SetId("")
+			return err
+		default:
+			return err
+		}
 	}
 	data.Set("port", env.Port)
 	data.Set("expires_at", env.ExpiresAt)
